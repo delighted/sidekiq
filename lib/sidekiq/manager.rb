@@ -38,6 +38,8 @@ module Sidekiq
 
     def stop(options={})
       watchdog('Manager#stop died') do
+        logger.debug { "Manager#stop called with options=#{options.inspect} (@ready=#{@ready.size} @busy=#{@busy.size})"}
+
         shutdown = options[:shutdown]
         timeout = options[:timeout]
 
@@ -45,14 +47,24 @@ module Sidekiq
         Sidekiq::Fetcher.done!
         @fetcher.async.terminate if @fetcher.alive?
 
-        logger.info { "Shutting down #{@ready.size} quiet workers" }
+        logger.info { "Shutting down #{@ready.size} quiet workers (@ready=#{@ready.size} @busy=#{@busy.size})" }
         @ready.each { |x| x.terminate if x.alive? }
         @ready.clear
 
         clear_worker_set
 
-        return after(0) { signal(:shutdown) } if @busy.empty?
-        hard_shutdown_in timeout if shutdown
+        logger.debug { "Worker set cleared (@ready=#{@ready.size} @busy=#{@busy.size})" }
+        if @busy.empty?
+          return after(0) do
+            logger.debug { "Signalling shutdown"}
+            signal(:shutdown)
+          end
+        end
+
+        if shutdown
+          logger.debug { "Issuing hard shutdown in #{timeout} (@ready=#{@ready.size} @busy=#{@busy.size})"}
+          hard_shutdown_in timeout
+        end
       end
     end
 
@@ -66,14 +78,17 @@ module Sidekiq
 
     def processor_done(processor)
       watchdog('Manager#processor_done died') do
+        logger.debug { "Manager#processor_done (@ready=#{@ready.size} @busy=#{@busy.size})"}
         @done_callback.call(processor) if @done_callback
         @in_progress.delete(processor.object_id)
         @threads.delete(processor.object_id)
         @busy.delete(processor)
         if stopped?
+          logger.debug { "Manager#processor_done -- stopped (@ready=#{@ready.size} @busy=#{@busy.size})"}
           processor.terminate if processor.alive?
           signal(:shutdown) if @busy.empty?
         else
+          logger.debug { "Manager#processor_done -- not stopped (@ready=#{@ready.size} @busy=#{@busy.size})"}
           @ready << processor if processor.alive?
         end
         dispatch
@@ -82,16 +97,19 @@ module Sidekiq
 
     def processor_died(processor, reason)
       watchdog("Manager#processor_died died") do
+        logger.debug { "Manager#processor_died (@ready=#{@ready.size} @busy=#{@busy.size})"}
         @in_progress.delete(processor.object_id)
         @threads.delete(processor.object_id)
         @busy.delete(processor)
 
         unless stopped?
+          logger.debug { "Manager#processor_died -- not stopped (@ready=#{@ready.size} @busy=#{@busy.size})"}
           p = Processor.new_link(current_actor)
           p.proxy_id = p.object_id
           @ready << p
           dispatch
         else
+          logger.debug { "Manager#processor_died -- stopped (@ready=#{@ready.size} @busy=#{@busy.size})"}
           signal(:shutdown) if @busy.empty?
         end
       end
@@ -99,13 +117,16 @@ module Sidekiq
 
     def assign(work)
       watchdog("Manager#assign died") do
+        logger.debug { "Manager#assign (@ready=#{@ready.size} @busy=#{@busy.size})"}
         if stopped?
+          logger.debug { "Manager#assign -- stopped (@ready=#{@ready.size} @busy=#{@busy.size})"}
           # Race condition between Manager#stop if Fetcher
           # is blocked on redis and gets a message after
           # all the ready Processors have been stopped.
           # Push the message back to redis.
           work.requeue
         else
+          logger.debug { "Manager#assign -- not stopped (@ready=#{@ready.size} @busy=#{@busy.size})"}
           processor = @ready.pop
           @in_progress[processor.object_id] = work
           @busy << processor
