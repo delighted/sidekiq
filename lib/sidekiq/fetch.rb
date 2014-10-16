@@ -100,7 +100,9 @@ module Sidekiq
 
       Sidekiq.redis do |conn|
         jobs_to_requeue.each do |queue, jobs|
-          conn.rpush("queue:#{queue}", jobs)
+          conn.multi do
+            [jobs].flatten(1).each { |v| conn.rpush("queue:#{queue}", v) }
+          end
         end
       end
       Sidekiq.logger.info("Pushed #{inprogress.size} messages back to Redis")
@@ -119,7 +121,9 @@ module Sidekiq
 
       def requeue
         Sidekiq.redis do |conn|
-          conn.rpush("queue:#{queue_name}", message)
+          conn.multi do
+            [message].flatten(1).each { |v| conn.rpush("queue:#{queue_name}", v) }
+          end
         end
       end
     end

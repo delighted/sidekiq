@@ -140,8 +140,8 @@ module Sidekiq
       Sidekiq.redis do |conn|
         conn.multi do
           conn.del(@rname)
-          conn.srem("queues", name)
-        end
+          [name].flatten(1).each { |v| conn.srem("queues", v) }
+        end.values_at(0, -1)
       end
     end
   end
