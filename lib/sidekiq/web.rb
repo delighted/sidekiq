@@ -5,6 +5,7 @@ require 'sinatra/base'
 require 'sidekiq'
 require 'sidekiq/api'
 require 'sidekiq/paginator'
+require 'erubis'
 
 module Sidekiq
   class Web < Sinatra::Base
@@ -162,10 +163,6 @@ module Sidekiq
 
       def redis_keys
         ["redis_stats", "uptime_in_days", "connected_clients", "used_memory_human", "used_memory_peak_human"]
-      end
-
-      def h(text)
-        ERB::Util.h(text)
       end
     end
 

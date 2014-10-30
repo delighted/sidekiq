@@ -15,7 +15,7 @@
   </head>
   <body class="admin">
     <div class="navbar navbar-fixed-top">
-      <%= erb :_nav %>
+      <%== erb :_nav %>
     </div>
 
     <div id="page">
@@ -25,7 +25,7 @@
             <div class="row">
               <h4 class="span10">
                 <span class="title"><%= t('Status') %></span>
-                <%= erb :_status %>
+                <%== erb :_status %>
               </h4>
               <% unless current_path == '' %>
                 <div class="span2 pull-right actions">
@@ -37,11 +37,11 @@
                 </div>
               <% end %>
             </div>
-            <%= erb :_summary %>
+            <%== erb :_summary %>
           </div>
 
           <div class="span12">
-            <%= yield %>
+            <%== yield %>
           </div>
         </div>
       </div>
