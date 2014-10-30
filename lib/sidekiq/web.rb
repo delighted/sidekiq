@@ -14,6 +14,7 @@ module Sidekiq
     set :public_folder, Proc.new { "#{root}/assets" }
     set :views, Proc.new { "#{root}/views" }
     set :locales, Proc.new { "#{root}/locales" }
+    set :erb, escape_html: true
 
     helpers do
       def strings
