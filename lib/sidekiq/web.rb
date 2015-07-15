@@ -168,7 +168,7 @@ module Sidekiq
       end
 
       def tkn
-        session['_csrf_token']
+        session[:csrf]
       end
     end
 
