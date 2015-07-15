@@ -11,6 +11,8 @@ module Sidekiq
   class Web < Sinatra::Base
     include Sidekiq::Paginator
 
+    use Rack::Protection, :use => :authenticity_token unless ENV['RACK_ENV'] == 'test'
+
     set :root, File.expand_path(File.dirname(__FILE__) + "/../../web")
     set :public_folder, Proc.new { "#{root}/assets" }
     set :views, Proc.new { "#{root}/views" }
@@ -163,6 +165,10 @@ module Sidekiq
 
       def redis_keys
         ["redis_stats", "uptime_in_days", "connected_clients", "used_memory_human", "used_memory_peak_human"]
+      end
+
+      def tkn
+        session[:csrf]
       end
     end
 
