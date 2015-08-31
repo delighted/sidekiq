@@ -101,10 +101,10 @@ module Sidekiq
           else
             q = payloads.first['queue']
             to_push = payloads.map { |entry| Sidekiq.dump_json(entry) }
-            pushed = conn.multi do
-              [q].flatten(1).each { |v| conn.sadd('queues', v) }
-              [to_push].flatten(1).each { |v| conn.lpush("queue:#{q}", v) }
-            end.values_at(-1)[0]
+            _, pushed = conn.multi do
+              conn.sadd('queues', q)
+              conn.lpush("queue:#{q}", to_push)
+            end
           end
         end
         pushed

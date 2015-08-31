@@ -160,11 +160,7 @@ module Sidekiq
         workers_to_remove = workers.select do |worker_name|
           worker_name =~ /:#{process_id}-/
         end
-        if !workers_to_remove.empty?
-          conn.multi do
-            [workers_to_remove].flatten(1).each { |v| conn.srem('workers', v) }
-          end.values_at(-1)
-        end
+        conn.srem('workers', workers_to_remove) if !workers_to_remove.empty?
       end
     rescue => ex
       Sidekiq.logger.warn("Unable to clear worker set while shutting down: #{ex.message}")
