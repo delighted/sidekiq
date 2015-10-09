@@ -119,7 +119,7 @@ module Sidekiq
     # get handle to the underlying thread performing work for a processor
     # so we have it call us and tell us.
     def real_thread(proxy_id, thr)
-      @threads[proxy_id] = thr
+      @threads[proxy_id] = thr if thr.alive?
     end
 
     def procline(tag)
