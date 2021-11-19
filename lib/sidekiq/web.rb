@@ -177,10 +177,12 @@ module Sidekiq
       erb :queues
     end
 
+    QUEUE_NAME = /\A[a-z_:.\-0-9]+\z/i
+
     get "/queues/:name" do
-      halt 404 unless params[:name]
-      @count = (params[:count] || 25).to_i
       @name = params[:name]
+      halt 404 if !@name || @name !~ QUEUE_NAME
+      @count = (params[:count] || 25).to_i
       (@current_page, @total_size, @messages) = page("queue:#{@name}", params[:page], @count)
       @messages = @messages.map {|msg| Sidekiq.load_json(msg) }
       erb :queue
