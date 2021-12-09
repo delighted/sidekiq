@@ -27,7 +27,15 @@ module Sidekiq
             # Just check Redis for the set of messages with a timestamp before now.
             now = Time.now.to_f.to_s
             Sidekiq.redis do |conn|
-              SETS.each do |sorted_set|
+              # Round-robin betweem sets, so that if one set has a large head of of ready jobs, another poller will
+              # have a chance to pick up jobs from the other set. Without this, a large backlog of read jobs on a set
+              # can cause the other set to go unpolled for long periods, which causes an uneven allocation of work and
+              # unexpected delays processing jobs from that set.
+              #
+              # Note that this patch assumes a large pool of workers are available so that there are enough pollers
+              # running, with enough frequency, so that both sets still get polled frequently enough. This is true for
+              # our use case.
+              SETS.sample(1).each do |sorted_set|
                 # Get the next item in the queue if it's score (time to execute) is <= now.
                 # We need to go through the list one at a time to reduce the risk of something
                 # going wrong between the time jobs are popped from the scheduled queue and when
