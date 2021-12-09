@@ -35,7 +35,7 @@ module Sidekiq
               # Note that this patch assumes a large pool of workers are available so that there are enough pollers
               # running, with enough frequency, so that both sets still get polled frequently enough. This is true for
               # our use case.
-              SETS.sample(1).each do |sorted_set|
+              SETS.shuffle.each do |sorted_set|
                 # Get the next item in the queue if it's score (time to execute) is <= now.
                 # We need to go through the list one at a time to reduce the risk of something
                 # going wrong between the time jobs are popped from the scheduled queue and when
