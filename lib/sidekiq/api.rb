@@ -140,7 +140,7 @@ module Sidekiq
       Sidekiq.redis do |conn|
         conn.multi do |xa|
           xa.del(@rname)
-          xa.srem?("queues", name)
+          xa.srem("queues", [name])
         end
       end
     end

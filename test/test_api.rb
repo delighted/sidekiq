@@ -53,10 +53,10 @@ class TestApi < Minitest::Test
       it "returns a hash of queue and size in order" do
         Sidekiq.redis do |conn|
           conn.rpush 'queue:foo', '{}'
-          conn.sadd? 'queues', 'foo'
+          conn.sadd 'queues', ['foo']
 
           3.times { conn.rpush 'queue:bar', '{}' }
-          conn.sadd? 'queues', 'bar'
+          conn.sadd 'queues', ['bar']
         end
 
         s = Sidekiq::Stats.new
@@ -74,10 +74,10 @@ class TestApi < Minitest::Test
       it "returns total enqueued jobs" do
         Sidekiq.redis do |conn|
           conn.rpush 'queue:foo', '{}'
-          conn.sadd? 'queues', 'foo'
+          conn.sadd 'queues', ['foo']
 
           3.times { conn.rpush 'queue:bar', '{}' }
-          conn.sadd? 'queues', 'bar'
+          conn.sadd 'queues', ['bar']
         end
 
         s = Sidekiq::Stats.new
@@ -301,7 +301,7 @@ class TestApi < Minitest::Test
       data = Sidekiq.dump_json({ 'payload' => {}, 'queue' => 'default', 'run_at' => Time.now.to_i })
       Sidekiq.redis do |c|
         c.multi do |xa|
-          xa.sadd?('workers', s)
+          xa.sadd('workers', [s])
           xa.set("worker:#{s}", data)
           xa..set("worker:#{s}:started", Time.now.to_s)
         end
