@@ -91,7 +91,7 @@ module Sidekiq
     def stats(worker, msg, queue)
       redis do |conn|
         conn.multi do
-          conn.sadd('workers', identity)
+          conn.sadd?('workers', identity)
           conn.setex("worker:#{identity}:started", EXPIRY, Time.now.to_s)
           hash = {:queue => queue, :payload => msg, :run_at => Time.now.to_i }
           conn.setex("worker:#{identity}", EXPIRY, Sidekiq.dump_json(hash))
@@ -114,7 +114,7 @@ module Sidekiq
         redis do |conn|
           processed = "stat:processed:#{Time.now.utc.to_date}"
           result = conn.multi do
-            conn.srem("workers", identity)
+            conn.srem?("workers", identity)
             conn.del("worker:#{identity}")
             conn.del("worker:#{identity}:started")
             conn.incrby("stat:processed", 1)

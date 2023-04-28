@@ -8,8 +8,8 @@ class TestClient < Minitest::Test
       @redis = Minitest::Mock.new
       def @redis.multi; [yield] * 2 if block_given?; end
       def @redis.set(*); true; end
-      def @redis.sadd(*); true; end
-      def @redis.srem(*); true; end
+      def @redis.sadd?(*); true; end
+      def @redis.srem?(*); true; end
       def @redis.get(*); nil; end
       def @redis.del(*); nil; end
       def @redis.incrby(*); nil; end

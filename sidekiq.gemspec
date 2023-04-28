@@ -14,11 +14,12 @@ Gem::Specification.new do |gem|
   gem.name          = "sidekiq"
   gem.require_paths = ["lib"]
   gem.version       = Sidekiq::VERSION
-  gem.add_dependency                  'redis', '>= 3.0.4'
-  gem.add_dependency                  'redis-namespace', '>= 1.3.1'
-  gem.add_dependency                  'connection_pool', '>= 1.0.0'
-  gem.add_dependency                  'celluloid', '>= 0.14.1'
+  gem.add_dependency                  'redis', '>= 4.8.0'
+  gem.add_dependency                  'redis-namespace', '>= 1.10.0'
+  gem.add_dependency                  'connection_pool', '1.1.0'
+  gem.add_dependency                  'celluloid', '0.15.1'
   gem.add_dependency                  'json'
+  gem.add_dependency                  'erubis', '~> 2.7.0'
   gem.add_development_dependency      'sinatra'
   gem.add_development_dependency      'minitest', '~> 5'
   gem.add_development_dependency      'rake'
