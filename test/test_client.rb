@@ -6,7 +6,7 @@ class TestClient < Minitest::Test
   describe 'with mock redis' do
     before do
       @redis = Minitest::Mock.new
-      def @redis.multi; [yield] * 2 if block_given?; end
+      def @redis.multi(*); [yield] * 2 if block_given?; end
       def @redis.set(*); true; end
       def @redis.sadd?(*); true; end
       def @redis.srem?(*); true; end

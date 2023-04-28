@@ -300,10 +300,10 @@ class TestApi < Minitest::Test
       s = '12345'
       data = Sidekiq.dump_json({ 'payload' => {}, 'queue' => 'default', 'run_at' => Time.now.to_i })
       Sidekiq.redis do |c|
-        c.multi do
-          c.sadd?('workers', s)
-          c.set("worker:#{s}", data)
-          c.set("worker:#{s}:started", Time.now.to_s)
+        c.multi do |xa|
+          xa.sadd?('workers', s)
+          xa.set("worker:#{s}", data)
+          xa..set("worker:#{s}:started", Time.now.to_s)
         end
       end
 

@@ -138,9 +138,9 @@ module Sidekiq
 
     def clear
       Sidekiq.redis do |conn|
-        conn.multi do
-          conn.del(@rname)
-          conn.srem?("queues", name)
+        conn.multi do |xa|
+          xa.del(@rname)
+          xa.srem?("queues", name)
         end
       end
     end
@@ -398,9 +398,9 @@ module Sidekiq
       Sidekiq.redis do |conn|
         workers = conn.smembers("workers")
         workers.each do |w|
-          msg, time = conn.multi do
-            conn.get("worker:#{w}")
-            conn.get("worker:#{w}:started")
+          msg, time = conn.multi do |xa|
+            xa.get("worker:#{w}")
+            xa.get("worker:#{w}:started")
           end
           next unless msg
           block.call(w, Sidekiq.load_json(msg), time)

@@ -90,11 +90,11 @@ module Sidekiq
 
     def stats(worker, msg, queue)
       redis do |conn|
-        conn.multi do
-          conn.sadd?('workers', identity)
-          conn.setex("worker:#{identity}:started", EXPIRY, Time.now.to_s)
+        conn.multi do |xa|
+          xa.sadd?('workers', identity)
+          xa.setex("worker:#{identity}:started", EXPIRY, Time.now.to_s)
           hash = {:queue => queue, :payload => msg, :run_at => Time.now.to_i }
-          conn.setex("worker:#{identity}", EXPIRY, Sidekiq.dump_json(hash))
+          xa.setex("worker:#{identity}", EXPIRY, Sidekiq.dump_json(hash))
         end
       end
 
@@ -103,9 +103,9 @@ module Sidekiq
       rescue Exception
         redis do |conn|
           failed = "stat:failed:#{Time.now.utc.to_date}"
-          result = conn.multi do
-            conn.incrby("stat:failed", 1)
-            conn.incrby(failed, 1)
+          result = conn.multi do |xa|
+            xa.incrby("stat:failed", 1)
+            xa.incrby(failed, 1)
           end
           conn.expire(failed, STATS_TIMEOUT) if result.last == 1
         end
@@ -113,12 +113,12 @@ module Sidekiq
       ensure
         redis do |conn|
           processed = "stat:processed:#{Time.now.utc.to_date}"
-          result = conn.multi do
-            conn.srem?("workers", identity)
-            conn.del("worker:#{identity}")
-            conn.del("worker:#{identity}:started")
-            conn.incrby("stat:processed", 1)
-            conn.incrby(processed, 1)
+          result = conn.multi do |xa|
+            xa.srem?("workers", identity)
+            xa.del("worker:#{identity}")
+            xa.del("worker:#{identity}:started")
+            xa.incrby("stat:processed", 1)
+            xa.incrby(processed, 1)
           end
           conn.expire(processed, STATS_TIMEOUT) if result.last == 1
         end
