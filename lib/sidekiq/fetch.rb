@@ -130,14 +130,9 @@ module Sidekiq
     # recreate the queue command each time we invoke Redis#blpop
     # to honor weights and avoid queue starvation.
     def queues_cmd
-      if @strictly_ordered_queues
-        @unique_queues.dup
-      else
-        permute = @queues.shuffle
-        permute.uniq!
-        permute << {timeout: TIMEOUT}
-        permute
-      end
+      queues = @strictly_ordered_queues ? @unique_queues.dup : @queues.shuffle.uniq
+      queues << { timeout: Sidekiq::Fetcher::TIMEOUT }
+      queues
     end
   end
 end
